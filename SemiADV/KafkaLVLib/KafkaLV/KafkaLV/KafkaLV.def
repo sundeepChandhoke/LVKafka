@@ -1,0 +1,18 @@
+LIBRARY      "KafkaLVLib"
+EXPORTS
+    ; Explicit exports go here
+	
+	KafkaCreateConsumer
+	KafkaCloseConsumer
+	ConsumeFromBeginning
+	ConsumeFromEnd
+	GetData
+	LVGetData
+	KafkaCreateProducer
+	KafkaCloseProducer
+	ConsumerSeek
+	ConsumerExitLoop
+	LVSendData
+	Consume
+	GetMinMaxOffsets
+	LVConsumeFromEnd
