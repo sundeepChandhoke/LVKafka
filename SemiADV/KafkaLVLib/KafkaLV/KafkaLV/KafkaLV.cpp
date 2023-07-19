@@ -38,8 +38,8 @@ std::map<std::string, std::shared_ptr<tProducerHandle>> g_producerMap;
 //--------------------------------------------------------------------
 KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t partition, char* consumerHandle)
 {
-    if (!kafkaBroker || !topic || !consumerHandle) return E_POINTER;
-    if (strlen(consumerHandle) < GUIDSTRINGSIZE) return MEM_E_INVALID_SIZE;
+    if (!kafkaBroker || !topic || !consumerHandle) return INVALID_PTR;
+    if (strlen(consumerHandle) < GUIDSTRINGSIZE) return INVALID_SIZE;
     std::shared_ptr<tConsumerHandle> aConsumer = std::make_shared<tConsumerHandle>();
     std::string hnd;
     kafkaWrapperErrors herr = GetGuid(hnd);
@@ -71,7 +71,7 @@ KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t par
 //--------------------------------------------------------------------------------
 KAFKALV_API long KafkaCloseConsumer(char* consumerHandle)
 {
-	if (!consumerHandle) return E_POINTER;
+	if (!consumerHandle) return INVALID_PTR;
     long ret = OK;
     try
     {
@@ -278,13 +278,13 @@ KAFKALV_API long ConsumerExitLoop(char* consumerHandle)
 //--------------------------------------------------------------------------------
 kafkaWrapperErrors GetGuid(std::string& guidStr)
 {
-	kafkaWrapperErrors err;
+	kafkaWrapperErrors err = OK;
 #ifdef _WIN32
     UUID guid;
     long ret = CoCreateGuid(&guid);
     if (ret == S_OK)
     {
-		err = OK;
+		kafkaWrapperErrors err = OK;
         //https://stackoverflow.com/questions/607651/how-many-characters-are-there-in-a-guid
         char guid_cstr[GUIDSTRINGSIZE];
         snprintf(guid_cstr, sizeof(guid_cstr),
