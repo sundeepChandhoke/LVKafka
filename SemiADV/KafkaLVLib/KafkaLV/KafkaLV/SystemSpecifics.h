@@ -29,6 +29,8 @@
 
 #include "uuid/uuid.h"
 
+#define KAFKALV_API __attribute__((visibility("default")))
+
 //Linux UUID string size
 #define GUIDSTRINGSIZE 36
 
