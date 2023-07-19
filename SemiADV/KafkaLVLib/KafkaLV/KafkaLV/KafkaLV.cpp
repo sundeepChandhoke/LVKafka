@@ -1,17 +1,15 @@
 // KafkaLV.cpp : Defines the exported functions for the DLL.
 //
 
-#include "pch.h"
-#include "framework.h"
-#include "KafkaLV.h"
-#include "Consumer.h"
+
+#include "SystemSpecifics.h"
 #include <memory>
 #include <map>
-#include "combaseapi.h"
+#include "KafkaLV.h"
+#include "Consumer.h"
 #include "KafkaLVDataDef.h"
 #include "producer.h"
 
-#define GUIDSTRINGSIZE 38
 #define ASSERT(f) if(!(f)) *reinterpret_cast<int*>(0xbad) = __LINE__
 //---------------------------------------------
 typedef struct _tConsumerHandle
@@ -28,7 +26,7 @@ typedef struct _tProducerHandle
 	std::string topic;
 }tProducerHandle;
 
-long GetGuid(std::string& guidStr);
+kafkaWrapperErrors GetGuid(std::string& guidStr);
 
 std::map<std::string, std::shared_ptr<tConsumerHandle>> g_consumerMap;
 std::map<std::string, std::shared_ptr<tProducerHandle>> g_producerMap;
@@ -43,30 +41,30 @@ KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t par
     if (strlen(consumerHandle) < GUIDSTRINGSIZE) return MEM_E_INVALID_SIZE;
     std::shared_ptr<tConsumerHandle> aConsumer = std::make_shared<tConsumerHandle>();
     std::string hnd;
-    HRESULT herr = GetGuid(hnd);
-    if (herr != S_OK)
+    kafkaWrapperErrors herr = GetGuid(hnd);
+    if (herr != OK)
     {
         return herr;
     }
 	if (hnd.size() > strlen(consumerHandle))
 	{
-		return MEM_E_INVALID_SIZE;
+		return INVALID_SIZE;
 	}
     aConsumer->brokerAddress = kafkaBroker;
     aConsumer->partition = partition;
     aConsumer->topic = topic;
     aConsumer->consumer = std::make_unique<KConsumer>();
-    herr = aConsumer->consumer->Initialize(kafkaBroker, topic, partition);
-    if (herr != S_OK)
+    long err = aConsumer->consumer->Initialize(kafkaBroker, topic, partition);
+    if (err != 0)
     {
-        return herr;
+        return UNDEFINED_ERROR;
     }
     g_consumerMap[hnd] = aConsumer;
 	
 
 	strcpy_s(consumerHandle, strlen(consumerHandle), hnd.c_str());
 	//strcpy(consumerHandle, hnd.c_str());
-    return S_OK;
+    return OK;
 }
 //--------------------------------------------------------------------------------
 // Close the Consumer Handle
@@ -74,7 +72,7 @@ KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t par
 KAFKALV_API long KafkaCloseConsumer(char* consumerHandle)
 {
 	if (!consumerHandle) return E_POINTER;
-    HRESULT ret = S_OK;
+    HRESULT ret = OK;
     try
     {
         g_consumerMap.at(consumerHandle)->consumer.reset();
@@ -82,7 +80,7 @@ KAFKALV_API long KafkaCloseConsumer(char* consumerHandle)
     }
     catch (std::out_of_range&)
     {
-        ret = E_INVALIDARG;
+        ret = INVALID_ARG;
     }
     return ret;
 
@@ -93,20 +91,20 @@ KAFKALV_API long KafkaCloseConsumer(char* consumerHandle)
 //--------------------------------------------------------------------------------
 KAFKALV_API long ConsumeFromBeginning(char* consumerHandle, int64_t maxEvents, int64_t* numEvents)
 {
-    HRESULT ret = S_OK;
+    HRESULT ret = OK;
     try
     {
         ret = g_consumerMap.at(consumerHandle)->consumer->ConsumeFromBeginning(maxEvents, numEvents);
     }
     catch (std::out_of_range&)
     {
-        ret = E_INVALIDARG;
+        ret = INVALID_ARG;
     }
     return ret;
 }
 KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t count)
 {
-	HRESULT ret = S_OK;
+	HRESULT ret = OK;
 	try
 	{
 		std::vector<kafkaEvent> consumerEvents;
@@ -122,7 +120,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			}
 			else
 			{
-				return MEM_E_INVALID_SIZE;
+				return INVALID_SIZE;
 			}
 			events[evNum].keyLength = ev.key.size();
 			if (ev.key.size() <= strlen(events[evNum].key))
@@ -131,7 +129,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			}
 			else
 			{
-				return MEM_E_INVALID_SIZE;
+				return INVALID_SIZE;
 			}
 
 			events[evNum].offset = ev.offset;
@@ -143,14 +141,14 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			}
 			else
 			{
-				return MEM_E_INVALID_SIZE;
+				return INVALID_SIZE;
 			}
 			evNum++;
 		}
 	}
 	catch (std::out_of_range&)
 	{
-		ret = E_INVALIDARG;
+		ret = INVALID_ARG;
 	}
 	return ret;
 }
@@ -159,14 +157,14 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 //-------------------------------------------------------------------------------------
 KAFKALV_API long Consume(char* consumerHandle, int64_t maxEvents, int64_t offset, int64_t* numEvents)
 {
-	HRESULT ret = S_OK;
+	long ret = OK;
 	try
 	{
 		ret = g_consumerMap.at(consumerHandle)->consumer->Consume(maxEvents, numEvents, offset);
 	}
 	catch (std::out_of_range&)
 	{
-		ret = E_INVALIDARG;
+		ret = INVALID_ARG;
 	}
 	return ret;
 
@@ -176,14 +174,14 @@ KAFKALV_API long Consume(char* consumerHandle, int64_t maxEvents, int64_t offset
 //-----------------------------------------------------------------------------------
 KAFKALV_API long GetMinMaxOffsets(char* consumerHandle, int64_t* min, int64_t* max)
 {
-	HRESULT ret = S_OK;
+	long ret = OK;
 	try
 	{
 		ret = g_consumerMap.at(consumerHandle)->consumer->GetMinMaxOffsets(min, max);
 	}
 	catch (std::out_of_range&)
 	{
-		ret = E_INVALIDARG;
+		ret = INVALID_ARG;
 	}
 	return ret;
 }
@@ -192,15 +190,16 @@ KAFKALV_API long GetMinMaxOffsets(char* consumerHandle, int64_t* min, int64_t* m
 //--------------------------------------------------------------------------------
 KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, int64_t* fetched)
 {
-    HRESULT ret = S_OK;
+    long ret = OK;
     try
     {
         std::vector<kafkaEvent>* consumerEvents;
         g_consumerMap.at(consumerHandle)->consumer->GetData(&consumerEvents);
+
         if (consumerEvents->size() > (size_t)count)
         {
             *fetched = 0;
-            return MEM_E_INVALID_SIZE;
+            return INVALID_SIZE;
         }
 
         int64_t evNum = 0;
@@ -213,7 +212,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
 			}
 			else
 			{
-				return MEM_E_INVALID_SIZE;
+				return INVALID_SIZE;
 			}
             events[evNum].keyLength = ev.key.size();
 			if (ev.key.size() <= strlen(events[evNum].key))
@@ -222,7 +221,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
 			}
 			else
 			{
-				return MEM_E_INVALID_SIZE;
+				return INVALID_SIZE;
 			}
             events[evNum].offset = ev.offset;
             events[evNum].timestamp = ev.timestamp;
@@ -234,7 +233,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
 			}
 			else
 			{
-				return MEM_E_INVALID_SIZE;
+				return INVALID_SIZE;
 			}
             evNum++;
 			*fetched = evNum;
@@ -242,47 +241,50 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
     }
     catch (std::out_of_range&)
     {
-        ret = E_INVALIDARG;
+        ret = INVALID_ARG;
     }
     return ret;
 }
 //Seek can only be called on actively fetched partitions
 KAFKALV_API long ConsumerSeek(char* consumerHandle, int64_t offset)
 {
-	HRESULT ret = S_OK;
+	long ret = OK;
 	try
 	{
 		ret = g_consumerMap.at(consumerHandle)->consumer->Seek(offset);
 	}
 	catch (std::out_of_range&)
 	{
-		ret = E_INVALIDARG;
+		ret = INVALID_ARG;
 	}
 	return ret;
 }
 //Seek can only be called on actively fetched partitions
 KAFKALV_API long ConsumerExitLoop(char* consumerHandle)
 {
-	HRESULT ret = S_OK;
+	kafkaWrapperErrors ret = OK;
 	try
 	{
 		g_consumerMap.at(consumerHandle)->consumer->ExitLoop();
 	}
 	catch (std::out_of_range&)
 	{
-		ret = E_INVALIDARG;
+		ret = INVALID_ARG;
 	}
 	return ret;
 }
 //--------------------------------------------------------------------------------
 // Private Methods
 //--------------------------------------------------------------------------------
-long GetGuid(std::string& guidStr)
+kafkaWrapperErrors GetGuid(std::string& guidStr)
 {
+	kafkaWrapperErrors err;
+#ifdef _WIN32
     UUID guid;
     HRESULT ret = CoCreateGuid(&guid);
     if (ret == S_OK)
     {
+		err = OK;
         //https://stackoverflow.com/questions/607651/how-many-characters-are-there-in-a-guid
         char guid_cstr[GUIDSTRINGSIZE];
         snprintf(guid_cstr, sizeof(guid_cstr),
@@ -293,49 +295,57 @@ long GetGuid(std::string& guidStr)
 
         guidStr.assign(guid_cstr);
     }
-    return ret;
+	else
+	{
+		err = UNDEFINED_ERROR;
+	}
+    return err;
+#elif __linux__
+#error Not defined
+#endif
 }
 //-----------------------------------------------------------------------------------------
 // Producer Client Export
 //-----------------------------------------------------------------------------------------
 KAFKALV_API long KafkaCreateProducer(char* kafkaBroker, char* topic, double bufferingTimeMS, char* producerHandle)
 {
-	if (!kafkaBroker || !topic || !producerHandle) return E_POINTER;
-	if (strlen(producerHandle) < GUIDSTRINGSIZE) return MEM_E_INVALID_SIZE;
+	if (!kafkaBroker || !topic || !producerHandle) return INVALID_PTR;
+	if (strlen(producerHandle) < GUIDSTRINGSIZE) return INVALID_SIZE;
 	std::shared_ptr<tProducerHandle> aProducer = std::make_shared<tProducerHandle>();
 	std::string hnd;
-	HRESULT herr = GetGuid(hnd);
-	if (herr != S_OK)
+	kafkaWrapperErrors herr = GetGuid(hnd);
+	if (herr != OK)
 	{
 		return herr;
 	}
 	if (hnd.size() > strlen(producerHandle))
 	{
-		return MEM_E_INVALID_SIZE;
+		return INVALID_SIZE;
 	}
 
 	aProducer->brokerAddress = kafkaBroker;
 	aProducer->topic = topic;
 	aProducer->producer = std::make_unique<KProducer>();
-	herr = aProducer->producer->Initialize(kafkaBroker, topic, bufferingTimeMS);
-	if (herr != S_OK)
+	long err = aProducer->producer->Initialize(kafkaBroker, topic, bufferingTimeMS);
+	if (herr != 0)
 	{
-		return herr;
+		return UNDEFINED_ERROR;
 	}
+	else
 	g_producerMap[hnd] = aProducer;
 	
 
 	strcpy_s(producerHandle, strlen(producerHandle), hnd.c_str());
 
-	return S_OK;
+	return OK;
 }
 //--------------------------------------------------------------------------------
 // Close the Producer Handle
 //--------------------------------------------------------------------------------
 KAFKALV_API long KafkaCloseProducer(char* producerHandle)
 {
-	if (!producerHandle) return E_POINTER;
-	HRESULT ret = S_OK;
+	if (!producerHandle) return INVALID_PTR;
+	kafkaWrapperErrors ret = OK;
 	try
 	{
 		g_producerMap.at(producerHandle)->producer.reset();
@@ -343,7 +353,7 @@ KAFKALV_API long KafkaCloseProducer(char* producerHandle)
 	}
 	catch (std::out_of_range&)
 	{
-		ret = E_INVALIDARG;
+		ret = INVALID_ARG;
 	}
 	return ret;
 
@@ -366,29 +376,9 @@ class tLVConnector
     tDSSetHandleSizeFunc	DSSetHandleSizeFunc = nullptr;
     tDSNewHandleFunc		DSNewHandleFunc = nullptr;
 
-    template<typename T>
-    void LinkToDll(T& functionPtr, const char* functionName, HMODULE module, bool assertF)
-    {
-        functionPtr = (T)GetProcAddress(module, functionName);
-        if (assertF) ASSERT(functionPtr != nullptr);
-    }
-
 public:
     tLVConnector()
     {
-        HMODULE module = GetModuleHandle(TEXT("lvrt.dll"));
-        if (module == nullptr) {
-            module = GetModuleHandle(nullptr);
-            if (module == nullptr) {
-                return;
-            }
-        }
-        bool assertF = true;
-        LinkToDll(NumericArrayResizeFunc, "NumericArrayResize", module, assertF);
-        LinkToDll(DSDisposeHandleFunc, "DSDisposeHandle", module, assertF);
-        LinkToDll(DSGetHandleSizeFunc, "DSGetHandleSize", module, assertF);
-        LinkToDll(DSSetHandleSizeFunc, "DSSetHandleSize", module, assertF);
-        LinkToDll(DSNewHandleFunc, "DSNewHandle", module, assertF);
     }
 
     void resize1DArray(void*** hndPtr, size_t size, bool packedF = true)
@@ -522,10 +512,10 @@ KAFKALV_API int32_t LVGetData(char* consumerHandle, tLVAligned1DArray& hnd)
 		if (events->size() == 0) {
 			if (hnd.len() == 0) {
 				// Nothing to do here
-				return 0;
+				return OK;
 			}
 			hnd.resize<tLVKafkaEvent>(0);
-			return 0;
+			return OK;
 		}
 
 		hnd.resize<tLVKafkaEvent>(events->size());
@@ -534,18 +524,18 @@ KAFKALV_API int32_t LVGetData(char* consumerHandle, tLVAligned1DArray& hnd)
 			lvData[i] = (*events)[i];
 		}
 
-		return S_OK;
+		return OK;
 	}
 	catch (std::out_of_range&)
 	{
-		return E_INVALIDARG;
+		return INVALID_ARG;
 	}
-	return S_OK;
+	return OK;
 }
 KAFKALV_API int32_t LVConsumeFromEnd(char* consumerHandle, tLVAligned1DArray& hnd, int32_t count)
 {
 	try {
-		HRESULT herr = S_OK;
+		long herr = OK;
 		std::vector<kafkaEvent> events;
 
 		// Add code to get the events
@@ -553,10 +543,10 @@ KAFKALV_API int32_t LVConsumeFromEnd(char* consumerHandle, tLVAligned1DArray& hn
 		if (events.size() == 0) {
 			if (hnd.len() == 0) {
 				// Nothing to do here
-				return 0;
+				return OK;
 			}
 			hnd.resize<tLVKafkaEvent>(0);
-			return 0;
+			return OK;
 		}
 
 		hnd.resize<tLVKafkaEvent>(events.size());
@@ -565,22 +555,18 @@ KAFKALV_API int32_t LVConsumeFromEnd(char* consumerHandle, tLVAligned1DArray& hn
 			lvData[i] = events[i];
 		}
 
-		return S_OK;
+		return OK;
 	}
 	catch (std::out_of_range&)
 	{
-		return E_INVALIDARG;
+		return INVALID_ARG;
 	}
-	return S_OK;
+	return OK;
 }
 KAFKALV_API int32_t LVSendData(char* producerHandle, int32_t partition, tLVAligned1DArray hnd)
 {
 	try{
 		size_t len = hnd.len();
-		if (len == 0) {
-			return 0;
-		}
-
 		std::vector<kafkaEvent> events;
 		events.resize(len);
 
@@ -595,8 +581,8 @@ KAFKALV_API int32_t LVSendData(char* producerHandle, int32_t partition, tLVAlign
 	}
 	catch (std::out_of_range&)
 	{
-		return E_INVALIDARG;
+		return INVALID_ARG;
 	}
-	return S_OK;
+	return OK;
 }
 

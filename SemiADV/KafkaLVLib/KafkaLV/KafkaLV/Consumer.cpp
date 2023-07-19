@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Consumer.h"
 /*
 * librdkafka - Apache Kafka C library
@@ -107,7 +106,7 @@ KConsumer::~KConsumer()
 		errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 	/* Set the consumer group id.
 		 * All consumers sharing the same group id will join the same
@@ -118,21 +117,21 @@ KConsumer::~KConsumer()
 		errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 	//	Emit RD_KAFKA_RESP_ERR__PARTITION_EOF event whenever the consumer reaches the end of a partition.
 	if (rd_kafka_conf_set(conf, "enable.partition.eof", "true",
 		errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 	// Manually commit offsets.
 	if (rd_kafka_conf_set(conf, "enable.auto.commit", "false",
 		errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 
 	/* If there is no previously committed offset for a partition
@@ -144,7 +143,7 @@ KConsumer::~KConsumer()
 		errstr, sizeof(errstr)) != RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 	
 
@@ -170,7 +169,7 @@ KConsumer::~KConsumer()
 	m_consumer = rd_kafka_new(RD_KAFKA_CONSUMER, conf, errstr, sizeof(errstr));
 	if (!m_consumer) {
 		m_errorString.assign(errstr);
-		return E_NOINTERFACE;
+		return NO_INTERFACE;
 	}
 
 	conf = NULL; /* Configuration object is now owned, and freed,
@@ -178,7 +177,7 @@ KConsumer::~KConsumer()
 
 	
 	
-	return S_OK;
+	return OK;
 }
  void KConsumer::ExitLoop(void)
  {
@@ -226,7 +225,7 @@ KConsumer::~KConsumer()
 		 }
 		 kafkaEvent event;
 		 err = ProcessMessage(msg, event);
-		 if (err == S_OK)
+		 if (err == OK)
 		 {
 			 events.push_back(event);
 			 numMsgs++;
@@ -234,10 +233,10 @@ KConsumer::~KConsumer()
 		 else if (err == RD_KAFKA_RESP_ERR__PARTITION_EOF)
 		 {
 			 //This is normal .. so suppress the error and continue
-			 err = S_OK;
+			 err = OK;
 		 }
 		 rd_kafka_message_destroy(msg);
-		 if (numMsgs == count || err != S_OK)
+		 if (numMsgs == count || err != OK)
 		 {
 			 break;
 		 }
@@ -267,7 +266,7 @@ KConsumer::~KConsumer()
 		// https://github.com/confluentinc/confluent-kafka-go/issues/121
 		err = CreatePartition(offset);
 	}
-	if (err != S_OK) return err;
+	if (err != OK) return err;
 
 	/*
 	* Consume messages
@@ -311,7 +310,7 @@ KConsumer::~KConsumer()
 		}
 		rd_kafka_message_destroy(msg);
 	}
-	if (err == S_OK)
+	if (err == OK)
 	{
 		*numEvents = m_consumerEvents.size();
 		err = rd_kafka_commit(m_consumer, NULL, 0 /*sync*/);
@@ -427,7 +426,7 @@ long KConsumer::CreatePartition(int64_t offset)
 	if (!m_topicPartition)
 	{
 		m_errorString.assign("Failed to create topic partition: ");
-		return E_OUTOFMEMORY;
+		return OUT_OF_MEMORY;
 	}
 	rd_kafka_topic_partition_t* topicPartition = rd_kafka_topic_partition_list_add(m_topicPartition, m_kafkaTopic.c_str(), m_partition);
 	err = rd_kafka_topic_partition_list_set_offset (m_topicPartition, m_kafkaTopic.c_str(), m_partition, offset);

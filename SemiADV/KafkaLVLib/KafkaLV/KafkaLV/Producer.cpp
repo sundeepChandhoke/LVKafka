@@ -1,5 +1,4 @@
 
-#include "pch.h"
 #include "Producer.h"
 /*
  * librdkafka - Apache Kafka C library
@@ -75,7 +74,7 @@ long KProducer::Initialize(std::string kafkaBroker)
 	rd_kafka_conf_t* conf = rd_kafka_conf_new();
 	if (!conf)
 	{
-		return E_OUTOFMEMORY;
+		return OUT_OF_MEMORY;
 	}
 	char errstr[512];
 
@@ -87,7 +86,7 @@ long KProducer::Initialize(std::string kafkaBroker)
 		RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 	//https://docs.confluent.io/5.5.0/clients/librdkafka/md_CONFIGURATION.html
 	/* Set linger.ms 
@@ -97,7 +96,7 @@ long KProducer::Initialize(std::string kafkaBroker)
 		RD_KAFKA_CONF_OK) {
 		m_errorString.assign(errstr);
 		rd_kafka_conf_destroy(conf);
-		return E_FAIL;
+		return FAIL;
 	}
 	/* Set the delivery report callback.
 		 * This callback will be called once per message to inform
@@ -116,15 +115,16 @@ long KProducer::Initialize(std::string kafkaBroker)
 	m_producer = rd_kafka_new(RD_KAFKA_PRODUCER, conf, errstr, sizeof(errstr));
 	if (!m_producer) {
 		m_errorString.assign(errstr);
-		return E_NOINTERFACE;
+		return NO_INTERFACE;
 	}
 
-	return S_OK;
+	return OK;
 }
 
 long KProducer::SendEvents(int32_t partition, std::vector<kafkaEvent>& events)
 {
 	m_errorLog.clear();
+	rd_kafka_resp_err_t err;
 	for (kafkaEvent event : events) 
 	{
 		if (event.payload.empty()) {
@@ -143,29 +143,58 @@ long KProducer::SendEvents(int32_t partition, std::vector<kafkaEvent>& events)
 		 * has been delivered (or failed permanently after retries).
 		 */
 	retry:
-		rd_kafka_resp_err_t err = rd_kafka_producev(
-														/* Producer handle */
-														m_producer,
-														/* Topic name */
-														RD_KAFKA_V_TOPIC(m_kafkaTopic.c_str()),
-														/* Partition*/
-														RD_KAFKA_V_PARTITION(partition),
-														/*Key*/
-														RD_KAFKA_V_KEY(event.key.c_str(), event.key.size()),
-														/* Make a copy of the payload. */
-														RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY),
-														/* Message value and length */
-														RD_KAFKA_V_VALUE(event.payload.c_str(), event.payload.size()),
-														/*timestamp*/
-														RD_KAFKA_V_TIMESTAMP(event.timestamp),
-														/* Per-Message opaque, provided in
-														 * delivery report callback as
-														 * msg_opaque. */
-														RD_KAFKA_V_OPAQUE(NULL),
-														/* End sentinel */
-														RD_KAFKA_V_END
-													);
-			
+		// Allow LabVIEW to send "Null" or empty payload data as tombstone message
+		if (event.payload.empty() | event.payload == "Null")
+		{
+			err = rd_kafka_producev(
+				/* Producer handle */
+				m_producer,
+				/* Topic name */
+				RD_KAFKA_V_TOPIC(m_kafkaTopic.c_str()),
+				/* Partition*/
+				RD_KAFKA_V_PARTITION(partition),
+				/*Key*/
+				RD_KAFKA_V_KEY(event.key.c_str(), event.key.size()),
+				/* Make a copy of the payload. */
+				RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY),
+				/* Message value and length */
+				RD_KAFKA_V_VALUE(nullptr, 0),
+				/*timestamp*/
+				RD_KAFKA_V_TIMESTAMP(event.timestamp),
+				/* Per-Message opaque, provided in
+				 * delivery report callback as
+				 * msg_opaque. */
+				RD_KAFKA_V_OPAQUE(NULL),
+				/* End sentinel */
+				RD_KAFKA_V_END
+			);
+		}
+		else
+		{
+			err = rd_kafka_producev(
+				/* Producer handle */
+				m_producer,
+				/* Topic name */
+				RD_KAFKA_V_TOPIC(m_kafkaTopic.c_str()),
+				/* Partition*/
+				RD_KAFKA_V_PARTITION(partition),
+				/*Key*/
+				RD_KAFKA_V_KEY(event.key.c_str(), event.key.size()),
+				/* Make a copy of the payload. */
+				RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY),
+				/* Message value and length */
+				RD_KAFKA_V_VALUE(event.payload.c_str(), event.payload.size()),
+				/*timestamp*/
+				RD_KAFKA_V_TIMESTAMP(event.timestamp),
+				/* Per-Message opaque, provided in
+				 * delivery report callback as
+				 * msg_opaque. */
+				RD_KAFKA_V_OPAQUE(NULL),
+				/* End sentinel */
+				RD_KAFKA_V_END
+			);
+
+		}
 
 		if (err != RD_KAFKA_RESP_ERR_NO_ERROR) 
 		{
@@ -224,7 +253,7 @@ long KProducer::SendEvents(int32_t partition, std::vector<kafkaEvent>& events)
 			std::string(" message(s) were not delivered")
 		);
 	}
-	return S_OK;
+	return OK;
 }
 
 /**

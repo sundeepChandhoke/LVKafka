@@ -1,5 +1,5 @@
 #pragma once
-#include "librdkafka/rdkafka.h"
+#include "rdkafka.h"
 #include <vector>
 #include <iostream>
 #include <string>
@@ -8,7 +8,7 @@
 #include <csignal>
 #include <cstring>
 #include "KafkaLVDataDef.h"
-
+#include "SystemSpecifics.h"
 
 class KConsumer
 {
