@@ -62,8 +62,7 @@ KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t par
     g_consumerMap[hnd] = aConsumer;
 	
 
-	strcpy_s(consumerHandle, strlen(consumerHandle), hnd.c_str());
-	//strcpy(consumerHandle, hnd.c_str());
+	strncpy(consumerHandle, hnd.c_str(),strlen(consumerHandle));
     return OK;
 }
 //--------------------------------------------------------------------------------
@@ -116,7 +115,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			events[evNum].payloadSize = ev.msgLen;
 			if (ev.msgLen <= strlen(events[evNum].payload))
 			{
-				strcpy_s(events[evNum].payload, strlen(events[evNum].payload), (char*)ev.payload.c_str());
+				strncpy(events[evNum].payload, (char*)ev.payload.c_str(), strlen(events[evNum].payload));
 			}
 			else
 			{
@@ -125,7 +124,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			events[evNum].keyLength = ev.key.size();
 			if (ev.key.size() <= strlen(events[evNum].key))
 			{
-				strcpy_s(events[evNum].key, strlen(events[evNum].key), (char*)ev.key.c_str());
+				strncpy(events[evNum].key, (char*)ev.key.c_str(), strlen(events[evNum].key));
 			}
 			else
 			{
@@ -137,7 +136,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			events[evNum].tsnameLength = ev.tsname.size();
 			if (ev.tsname.size() <= strlen(events[evNum].tsname))
 			{
-				strcpy_s(events[evNum].tsname, strlen(events[evNum].tsname), (char*)ev.tsname.c_str());
+				strncpy(events[evNum].tsname, (char*)ev.tsname.c_str(), strlen(events[evNum].tsname));
 			}
 			else
 			{
@@ -208,7 +207,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
             events[evNum].payloadSize = ev.msgLen;
 			if (ev.msgLen <= strlen(events[evNum].payload))
 			{
-				strcpy_s(events[evNum].payload, strlen(events[evNum].payload), (char*)ev.payload.c_str());
+				strncpy(events[evNum].payload, (char*)ev.payload.c_str(), strlen(events[evNum].payload));
 			}
 			else
 			{
@@ -217,7 +216,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
             events[evNum].keyLength = ev.key.size();
 			if (ev.key.size() <= strlen(events[evNum].key))
 			{
-				strcpy_s(events[evNum].key, strlen(events[evNum].key), (char*)ev.key.c_str());
+				strncpy(events[evNum].key, (char*)ev.key.c_str(), strlen(events[evNum].key));
 			}
 			else
 			{
@@ -229,7 +228,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
             events[evNum].tsnameLength = ev.tsname.size();
 			if (ev.tsname.size() <= strlen(events[evNum].tsname))
 			{
-				strcpy_s(events[evNum].tsname, strlen(events[evNum].tsname), (char*)ev.tsname.c_str());
+				strncpy(events[evNum].tsname, (char*)ev.tsname.c_str(), strlen(events[evNum].tsname));
 			}
 			else
 			{
@@ -343,7 +342,7 @@ KAFKALV_API long KafkaCreateProducer(char* kafkaBroker, char* topic, double buff
 	g_producerMap[hnd] = aProducer;
 	
 
-	strcpy_s(producerHandle, strlen(producerHandle), hnd.c_str());
+	strncpy(producerHandle, hnd.c_str(),strlen(producerHandle));
 
 	return OK;
 }
