@@ -241,7 +241,7 @@ KConsumer::~KConsumer()
 			 break;
 		 }
 	 }
-	 if (err == S_OK)
+	 if (err == OK)
 	 {
 		 err = rd_kafka_commit(m_consumer, NULL, 0 /*sync*/);
 	 }

@@ -72,7 +72,7 @@ KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t par
 KAFKALV_API long KafkaCloseConsumer(char* consumerHandle)
 {
 	if (!consumerHandle) return E_POINTER;
-    HRESULT ret = OK;
+    long ret = OK;
     try
     {
         g_consumerMap.at(consumerHandle)->consumer.reset();
@@ -91,7 +91,7 @@ KAFKALV_API long KafkaCloseConsumer(char* consumerHandle)
 //--------------------------------------------------------------------------------
 KAFKALV_API long ConsumeFromBeginning(char* consumerHandle, int64_t maxEvents, int64_t* numEvents)
 {
-    HRESULT ret = OK;
+    long ret = OK;
     try
     {
         ret = g_consumerMap.at(consumerHandle)->consumer->ConsumeFromBeginning(maxEvents, numEvents);
@@ -104,7 +104,7 @@ KAFKALV_API long ConsumeFromBeginning(char* consumerHandle, int64_t maxEvents, i
 }
 KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t count)
 {
-	HRESULT ret = OK;
+	long ret = OK;
 	try
 	{
 		std::vector<kafkaEvent> consumerEvents;
@@ -281,7 +281,7 @@ kafkaWrapperErrors GetGuid(std::string& guidStr)
 	kafkaWrapperErrors err;
 #ifdef _WIN32
     UUID guid;
-    HRESULT ret = CoCreateGuid(&guid);
+    long ret = CoCreateGuid(&guid);
     if (ret == S_OK)
     {
 		err = OK;
@@ -301,7 +301,15 @@ kafkaWrapperErrors GetGuid(std::string& guidStr)
 	}
     return err;
 #elif __linux__
-#error Not defined
+
+	uuid_t guid;
+	//Generate a unique ID
+	uuid_generate(guid);
+	char guidChar[36];
+	//Convert the unique id type to char
+	uuid_unparse(guid, guidChar);
+	guidStr.assign(guidChar);
+	return OK;
 #endif
 }
 //-----------------------------------------------------------------------------------------
