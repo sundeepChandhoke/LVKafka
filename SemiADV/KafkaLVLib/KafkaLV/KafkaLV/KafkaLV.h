@@ -14,6 +14,8 @@ KAFKALV_API long Consume(char* consumerHandle, int64_t maxEvents, int64_t offset
 KAFKALV_API long GetMinMaxOffsets(char* consumerHandle, int64_t* min, int64_t* max);
 KAFKALV_API long ConsumerSeek(char* consumerHandle, int64_t offset);
 KAFKALV_API long ConsumerExitLoop(char* consumerHandle);
+KAFKALV_API long KafkaCloseConsumer(char* consumerHandle);
+
 typedef struct _tkEvent
 {
 	char* payload;
