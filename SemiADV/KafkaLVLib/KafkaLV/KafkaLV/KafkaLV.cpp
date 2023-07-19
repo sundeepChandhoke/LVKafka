@@ -8,7 +8,8 @@
 #include "KafkaLV.h"
 #include "Consumer.h"
 #include "KafkaLVDataDef.h"
-#include "producer.h"
+#include "Producer.h"
+#include "extcode.h"
 
 #define ASSERT(f) if(!(f)) *reinterpret_cast<int*>(0xbad) = __LINE__
 //---------------------------------------------
@@ -371,17 +372,6 @@ KAFKALV_API long KafkaCloseProducer(char* producerHandle)
 //-----------------------------------------------------------------------------------------
 class tLVConnector
 {
-    typedef int32_t(_cdecl* tNumericArrayResizeFunc)(int32_t, int32_t, void*, int32_t);
-    typedef int32_t(_cdecl* tDSDisposeHandleFunc)(void*);
-    typedef int32_t(_cdecl* tDSGetHandleSizeFunc)(void*);
-    typedef int32_t(_cdecl* tDSSetHandleSizeFunc)(void*, int32_t);
-    typedef void* (_cdecl* tDSNewHandleFunc)(int32_t);
-
-    tNumericArrayResizeFunc NumericArrayResizeFunc = nullptr;
-    tDSDisposeHandleFunc	DSDisposeHandleFunc = nullptr;
-    tDSGetHandleSizeFunc	DSGetHandleSizeFunc = nullptr;
-    tDSSetHandleSizeFunc	DSSetHandleSizeFunc = nullptr;
-    tDSNewHandleFunc		DSNewHandleFunc = nullptr;
 
 public:
     tLVConnector()
@@ -392,10 +382,10 @@ public:
     {
         int32_t retVal = 0;
         if (packedF) {
-            retVal = NumericArrayResizeFunc(0x1, 1, hndPtr, static_cast<int32_t>(size));
+            retVal = NumericArrayResize(0x1, 1, reinterpret_cast<UHandle *>(hndPtr), static_cast<int32_t>(size));
         }
         else {
-            retVal = NumericArrayResizeFunc(0xa, 1, hndPtr, static_cast<int32_t>(size / sizeof(uint64_t) + 1));
+            retVal = NumericArrayResize(0xa, 1, reinterpret_cast<UHandle *>(hndPtr), static_cast<int32_t>(size / sizeof(uint64_t) + 1));
         }
         ASSERT(retVal == 0);
     }
