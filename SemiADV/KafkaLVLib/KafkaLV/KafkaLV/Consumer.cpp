@@ -399,7 +399,15 @@ long  KConsumer::ProcessMessage(rd_kafka_message_t* message, kafkaEvent& event)
 				event.key = "";
 			}
 			event.msgLen = message->len;
-			event.payload.assign(static_cast<const char*>(message->payload));
+			// handle null message properly
+			if (message->len == 0)
+			{
+				event.payload.assign("");
+			}
+			else 
+			{
+				event.payload.assign(static_cast<const char*>(message->payload));
+			}
 			break;
 		}
 
