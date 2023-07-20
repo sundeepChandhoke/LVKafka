@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <vector>
+#include <string>
 #include "KafkaLV.h"
 #include "Consumer.h"
 #include "KafkaLVDataDef.h"
@@ -64,7 +65,7 @@ KAFKALV_API long KafkaCreateConsumer(char* kafkaBroker, char* topic, int32_t par
     g_consumerMap[hnd] = aConsumer;
 	
 
-	strncat(consumerHandle, hnd.c_str(),strlen(consumerHandle));
+	strncpy(consumerHandle, hnd.c_str(),strlen(consumerHandle));
     return OK;
 }
 //--------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			events[evNum].payloadSize = ev.msgLen;
 			if (ev.msgLen <= strlen(events[evNum].payload))
 			{
-				strncat(events[evNum].payload, (char*)ev.payload.c_str(), strlen(events[evNum].payload));
+				strncpy(events[evNum].payload, (char*)ev.payload.c_str(), strlen(events[evNum].payload));
 			}
 			else
 			{
@@ -126,7 +127,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			events[evNum].keyLength = ev.key.size();
 			if (ev.key.size() <= strlen(events[evNum].key))
 			{
-				strncat(events[evNum].key, (char*)ev.key.c_str(), strlen(events[evNum].key));
+				strncpy(events[evNum].key, (char*)ev.key.c_str(), strlen(events[evNum].key));
 			}
 			else
 			{
@@ -138,7 +139,7 @@ KAFKALV_API long ConsumeFromEnd(char* consumerHandle, kEvent* events, int32_t co
 			events[evNum].tsnameLength = ev.tsname.size();
 			if (ev.tsname.size() <= strlen(events[evNum].tsname))
 			{
-				strncat(events[evNum].tsname, (char*)ev.tsname.c_str(), strlen(events[evNum].tsname));
+				strncpy(events[evNum].tsname, (char*)ev.tsname.c_str(), strlen(events[evNum].tsname));
 			}
 			else
 			{
@@ -209,7 +210,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
             events[evNum].payloadSize = ev.msgLen;
 			if (ev.msgLen <= strlen(events[evNum].payload))
 			{
-				strncat(events[evNum].payload, (char*)ev.payload.c_str(), strlen(events[evNum].payload));
+				strncpy(events[evNum].payload, (char*)ev.payload.c_str(), strlen(events[evNum].payload));
 			}
 			else
 			{
@@ -218,7 +219,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
             events[evNum].keyLength = ev.key.size();
 			if (ev.key.size() <= strlen(events[evNum].key))
 			{
-				strncat(events[evNum].key, (char*)ev.key.c_str(), strlen(events[evNum].key));
+				strncpy(events[evNum].key, (char*)ev.key.c_str(), strlen(events[evNum].key));
 			}
 			else
 			{
@@ -230,7 +231,7 @@ KAFKALV_API long GetData(char* consumerHandle, int64_t count, kEvent* events, in
             events[evNum].tsnameLength = ev.tsname.size();
 			if (ev.tsname.size() <= strlen(events[evNum].tsname))
 			{
-				strncat(events[evNum].tsname, (char*)ev.tsname.c_str(), strlen(events[evNum].tsname));
+				strncpy(events[evNum].tsname, (char*)ev.tsname.c_str(), strlen(events[evNum].tsname));
 			}
 			else
 			{
