@@ -5,6 +5,8 @@
 #include "SystemSpecifics.h"
 #include <memory>
 #include <map>
+#include <vector>
+#include <string>
 #include "KafkaLV.h"
 #include "Consumer.h"
 #include "KafkaLVDataDef.h"

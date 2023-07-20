@@ -211,7 +211,11 @@ KConsumer::~KConsumer()
 	 /*
 	 * Consume messages
 	 */
-	 rd_kafka_poll_set_consumer(m_consumer);
+	 err = rd_kafka_poll_set_consumer(m_consumer);
+	 if (err)
+	 {
+		 return err;
+	 }
 	 m_errorLog.clear();
 	 int32_t numMsgs = 0;
 	 while (s_run) {
@@ -404,7 +408,7 @@ long  KConsumer::ProcessMessage(rd_kafka_message_t* message, kafkaEvent& event)
 			{
 				event.payload.assign("");
 			}
-			else 
+			else
 			{
 				event.payload.assign(static_cast<const char*>(message->payload));
 			}
