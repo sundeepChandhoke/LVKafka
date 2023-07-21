@@ -492,7 +492,7 @@ public:
     template <typename T>
     void resize(size_t numElements)
     {
-        gLVConnector.resize1DArray(reinterpret_cast<void***>(&m_hnd), numElements * sizeof(T), false);
+        gLVConnector.resize1DArray(reinterpret_cast<void***>(&m_hnd), numElements * sizeof(T), true);
         (*m_hnd)->m_len = static_cast<int32_t>(numElements);
     }
 };
