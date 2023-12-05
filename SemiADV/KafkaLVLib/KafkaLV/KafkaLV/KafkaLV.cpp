@@ -380,15 +380,13 @@ public:
     {
     }
 
-    void resize1DArray(void*** hndPtr, size_t size, bool packedF = true)
+    void resize1DArray(void*** hndPtr, size_t size, int32_t eltAlignment = 1)
     {
         int32_t retVal = 0;
-        if (packedF) {
-            retVal = NumericArrayResize(0x1, 1, reinterpret_cast<UHandle *>(hndPtr), static_cast<int32_t>(size));
-        }
-        else {
-            retVal = NumericArrayResize(0xa, 1, reinterpret_cast<UHandle *>(hndPtr), static_cast<int32_t>(size / sizeof(uint64_t) + 1));
-        }
+	if (eltAlignment > 4)
+	    retVal = NumericArrayResize(0xa, 1, reinterpret_cast<UHandle *>(hndPtr), (static_cast<int32_t>(size) + 7) / 8);
+	else
+	    retVal = NumericArrayResize(0x1, 1, reinterpret_cast<UHandle *>(hndPtr), static_cast<int32_t>(size));
         ASSERT(retVal == 0);
     }
 };
@@ -405,7 +403,7 @@ class tLVString
 public:
     tLVString& operator=(const std::string& rhs)
     {
-        gLVConnector.resize1DArray(reinterpret_cast<void***>(&m_hnd), rhs.size());
+      gLVConnector.resize1DArray(reinterpret_cast<void***>(&m_hnd), rhs.size());
         (*m_hnd)->m_len = static_cast<int32_t>(rhs.size());
         memcpy(data(), rhs.data(), rhs.size());
         return *this;
@@ -490,9 +488,9 @@ public:
     T* data() { return m_hnd == nullptr ? nullptr : reinterpret_cast<T*>((*m_hnd)->m_data); }
 
     template <typename T>
-    void resize(size_t numElements)
+    void resize(size_t numElements, int32_t eltAlignment = 1)
     {
-        gLVConnector.resize1DArray(reinterpret_cast<void***>(&m_hnd), numElements * sizeof(T), true);
+        gLVConnector.resize1DArray(reinterpret_cast<void***>(&m_hnd), numElements * sizeof(T), eltAlignment);
         (*m_hnd)->m_len = static_cast<int32_t>(numElements);
     }
 };
@@ -517,7 +515,7 @@ KAFKALV_API int32_t LVGetData(char* consumerHandle, tLVAligned1DArray& hnd)
 			return OK;
 		}
 
-		hnd.resize<tLVKafkaEvent>(events->size());
+		hnd.resize<tLVKafkaEvent>(events->size(), 8);
 		auto lvData = hnd.data<tLVKafkaEvent>();
 		for (size_t i = 0; i < events->size(); i++) {
 			lvData[i] = (*events)[i];
@@ -548,7 +546,7 @@ KAFKALV_API int32_t LVConsumeFromEnd(char* consumerHandle, tLVAligned1DArray& hn
 			return OK;
 		}
 
-		hnd.resize<tLVKafkaEvent>(events.size());
+		hnd.resize<tLVKafkaEvent>(events.size(), 8);
 		auto lvData = hnd.data<tLVKafkaEvent>();
 		for (size_t i = 0; i < events.size(); i++) {
 			lvData[i] = events[i];
