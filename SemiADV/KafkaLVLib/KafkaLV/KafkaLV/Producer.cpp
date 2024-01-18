@@ -144,7 +144,7 @@ long KProducer::SendEvents(int32_t partition, std::vector<kafkaEvent>& events)
 		 */
 	retry:
 		// Allow LabVIEW to send "Null" or empty payload data as tombstone message
-		if (event.payload.empty() | event.payload == "Null")
+		if (event.payload.empty() || (event.payload == "Null"))
 		{
 			err = rd_kafka_producev(
 				/* Producer handle */
@@ -183,7 +183,7 @@ long KProducer::SendEvents(int32_t partition, std::vector<kafkaEvent>& events)
 				/* Make a copy of the payload. */
 				RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY),
 				/* Message value and length */
-				RD_KAFKA_V_VALUE(event.payload.c_str(), event.payload.size()),
+				RD_KAFKA_V_VALUE(event.payload.data(), event.payload.size()),
 				/*timestamp*/
 				RD_KAFKA_V_TIMESTAMP(event.timestamp),
 				/* Per-Message opaque, provided in
