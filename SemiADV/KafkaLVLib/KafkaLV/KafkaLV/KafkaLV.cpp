@@ -1,7 +1,7 @@
 // KafkaLV.cpp : Defines the exported functions for the DLL.
 //
 
-
+#define KAFKALV_EXPORTS
 #include "SystemSpecifics.h"
 #include <memory>
 #include <map>
