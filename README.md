@@ -21,19 +21,19 @@ This has been tested on Red Hat Enterprise Linux 8 and Ubuntu 22.04.
 
 Before building, the following package must be installed on the system:
 * UUID
-** On RHEL 8, use `sudo dnf install libuuid`
-** On Ubuntu 22.04, use `sudo apt install uuid-dev`
+  * On RHEL 8, use `sudo dnf install libuuid`
+  * On Ubuntu 22.04, use `sudo apt install uuid-dev`
 
 * RDKafka
- * Option 1 (recommended): Build from source
-   * Download from `https://github.com/confluentinc/librdkafka.git`
-   * `cd` to the downloaded directory
-   * `./configure`
-   * `make`
-   * `make install`
- * Option 2 (untested): Install packages
-   * RHEL 8: `sudo dnf install librdkafka-devel`
-   * Ubuntu 22.04: `sudo apt install librdkafka-dev`
+  * Option 1 (recommended): Build from source
+    * Download from `https://github.com/confluentinc/librdkafka.git`
+    * `cd` to the download directory
+    * `./configure`
+    * `make`
+    * `make install`
+  * Option 2 (untested): Install packages
+    * RHEL 8: `sudo dnf install librdkafka-devel`
+    * Ubuntu 22.04: `sudo apt install librdkafka-dev`
 
 For information on RDKafka, refer to (https://docs.confluent.io/kafka-clients/librdkafka/current/overview.html)
 
