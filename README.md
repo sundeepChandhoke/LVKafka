@@ -11,7 +11,7 @@ In the ..\Windows\includes\ directory, there is C++ source information that is s
 
 In the ..\librdkafka\ directory, the .h, .lib, and .dll files for rdkafka are included.
 
-The extCode.h file is provided with LabVIEW. The path to the file should be in your includes, which is specific to the LabVIEW version that will be used (e.g. C:\Program Files\National Instruments\LabVIEW 2019\cintools).
+The extcode.h file is provided with LabVIEW. The path to the file should be in your includes, which is specific to the LabVIEW version that will be used (e.g. C:\Program Files\National Instruments\LabVIEW 2019\cintools).
 
 Add the path to the DLL to the LabVIEW VI Search paths to allow Call Library Function Nodes to find the DLL when referenced as LVKafkaLib.*.
 
