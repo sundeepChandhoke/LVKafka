@@ -1,7 +1,7 @@
 // KafkaLV.cpp : Defines the exported functions for the DLL.
 //
 
-
+#define KAFKALV_EXPORTS
 #include "SystemSpecifics.h"
 #include <memory>
 #include <map>
@@ -280,8 +280,8 @@ KAFKALV_API long ConsumerExitLoop(char* consumerHandle)
 //--------------------------------------------------------------------------------
 kafkaWrapperErrors GetGuid(std::string& guidStr)
 {
-	kafkaWrapperErrors err = OK;
 #ifdef _WIN32
+    kafkaWrapperErrors err = OK;
     UUID guid;
     long ret = CoCreateGuid(&guid);
     if (ret == S_OK)
@@ -337,12 +337,12 @@ KAFKALV_API long KafkaCreateProducer(char* kafkaBroker, char* topic, double buff
 	aProducer->topic = topic;
 	aProducer->producer = std::make_unique<KProducer>();
 	long err = aProducer->producer->Initialize(kafkaBroker, topic, bufferingTimeMS);
-	if (herr != 0)
+	if (err != 0)
 	{
 		return UNDEFINED_ERROR;
 	}
 	else
-	g_producerMap[hnd] = aProducer;
+		g_producerMap[hnd] = aProducer;
 	
 
 	strncpy(producerHandle, hnd.c_str(),strlen(producerHandle));
@@ -537,6 +537,7 @@ KAFKALV_API int32_t LVConsumeFromEnd(char* consumerHandle, tLVAligned1DArray& hn
 
 		// Add code to get the events
 		herr = g_consumerMap.at(consumerHandle)->consumer->ConsumeFromEnd(events, count);
+		if (herr != OK) return herr;
 		if (events.size() == 0) {
 			if (hnd.len() == 0) {
 				// Nothing to do here

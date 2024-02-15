@@ -440,7 +440,7 @@ long KConsumer::CreatePartition(int64_t offset)
 		m_errorString.assign("Failed to create topic partition: ");
 		return OUT_OF_MEMORY;
 	}
-	rd_kafka_topic_partition_t* topicPartition = rd_kafka_topic_partition_list_add(m_topicPartition, m_kafkaTopic.c_str(), m_partition);
+	(void)rd_kafka_topic_partition_list_add(m_topicPartition, m_kafkaTopic.c_str(), m_partition);
 	err = rd_kafka_topic_partition_list_set_offset (m_topicPartition, m_kafkaTopic.c_str(), m_partition, offset);
 	if (err)
 	{
